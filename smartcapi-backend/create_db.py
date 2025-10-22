@@ -1,26 +1,17 @@
+import os
+from app import create_app, db
+import app.models  # registers models
 
-import mysql.connector
-from mysql.connector import errorcode
+def recreate_database():
+    app = create_app({
+        'SQLALCHEMY_DATABASE_URI': os.getenv("DATABASE_URL", "sqlite:///smartcapi.db")
+    })
+    with app.app_context():
+        print("Dropping all tables...")
+        db.drop_all()
+        print("Creating all tables...")
+        db.create_all()
+        print("Done. Database schema created.")
 
-DB_NAME = 'smartcapi_pwa'
-
-config = {
-    'user': 'root',
-    'password': '',
-    'host': 'localhost',
-}
-
-try:
-    cnx = mysql.connector.connect(**config)
-    cursor = cnx.cursor()
-    cursor.execute(f"CREATE DATABASE IF NOT EXISTS {DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
-    print(f"Database '{DB_NAME}' created or already exists.")
-    cursor.close()
-    cnx.close()
-except mysql.connector.Error as err:
-    if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-        print("Something is wrong with your user name or password")
-    elif err.errno == errorcode.ER_BAD_DB_ERROR:
-        print("Database does not exist")
-    else:
-        print(err)
+if __name__ == "__main__":
+    recreate_database()
